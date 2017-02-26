@@ -1,0 +1,264 @@
+---
+title: 'DATA 605:  Week 4 Assignment'
+author: "Aaron Grzasko"
+date: "February 26, 2017"
+output: 
+    html_document:
+    theme: default
+highlight: haddock
+---  
+    
+    ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem Set 1  
+  
+In this problem, we'll verify using R that SVD and Eigenvalues are related as worked
+out in the weekly module, given a 2 × 3 matrix **A**:  
+
+$$\begin{bmatrix} 1 & 2 & 3 \\ -1 & 0 & 4 \end{bmatrix}$$  
+```{r}
+# matrix A, specified in the problem statement 
+A <- matrix(c(1,2,3,-1,0,4),2,3,byrow=TRUE)
+```  
+  
+
+********  
+Write code in R to compute **$X=A{A}^{T}$** and **$Y = {A}^{T}A$**:  
+
+*The scripts below take advantage of built-in R matrix multiplication functionality and the `t()` function to calculate the applicable matrix transpose.*  
+  
+```{r}
+
+
+# matrix X, defined as matrix A times A transpose  
+X <- A %*% t(A)  
+X  
+
+# matrix Y, defined as matrix A tranpose times A
+Y <- t(A) %*% A
+Y
+
+```
+********  
+Then, compute the eigenvalues and eigenvectors of **X** and **Y** using the built-in commands in R.  
+  
+*The `eigen()` function in base R produces both eigenvalues and eigenvectors for a valid matrix:*  
+
+```{r}
+# eigenvalues/eigenvectors of X
+eigenX <- eigen(X)
+eigenX
+
+
+# eigenvalues/eigenvectors of Y
+eigenY <- eigen(Y)
+eigenY
+
+```
+********  
+Then, compute the left-singular, singular values, and right-singular vectors of **A** using
+the svd command.  
+```{r}
+# output:  d = singular values; u = matrix comprising left singular vectors of A;
+#          v = matrix comprising right singular vectors of A  
+  
+svdA <- svd(A)
+svd(A)
+```
+
+
+Examine the two sets of singular vectors and show that they are indeed
+eigenvectors of **X** and **Y**.  
+  
+*Note: The eigenvectors of a system are not unique; however, the ratio between elements of a given eigenvector are, in fact, unique---see [link](http://lpsa.swarthmore.edu/MtrxVibe/EigMat/MatrixEigen.html).*  
+  
+*To verify that the singular vectors u and v are eigenvectors of X and Y, respectively, we will calculate new vectors that divide each element of the original vector by the first element in that vector.  We will then confirm that these "standardized"" vectors are identical in both u and X, and also identical in v and Y.*  
+
+*Let's first compare u and x vectors:* 
+```{r}
+
+# standardize 1st vector in u:  displays element values relative to value of element 1
+u1_ratio <- c(svdA$u[,1][1]/svdA$u[,1][1],svdA$u[,1][2]/svdA$u[,1][1]) 
+u1_ratio
+# standard 1st eigenvector of x: displays element values relative to value of element 1
+
+x1_ratio <- c(eigenX$vectors[,1][1]/eigenX$vectors[,1][1],eigenX$vectors[,1][2]/eigenX$vectors[,1][1])
+x1_ratio
+
+# verify that vectors u1_ratio and x1_ratio are identical, after accounting for small differences in rounding
+abs(x1_ratio -  u1_ratio) < 0.0001
+
+
+# standardize 2nd vector in u:  displays element values relative to value of element 1
+u2_ratio <- c(svdA$u[,2][1]/svdA$u[,2][1],svdA$u[,2][2]/svdA$u[,2][1]) 
+u2_ratio
+
+# standard 2nd eigenvector of x: displays element values relative to value of element 1
+x2_ratio <- c(eigenX$vectors[,2][1]/eigenX$vectors[,2][1],eigenX$vectors[,2][2]/eigenX$vectors[,2][1])
+x2_ratio
+
+# verify that vectors u2_ratio and x2_ratio are identical, after accounting for small differences in rounding
+abs(x2_ratio -  u2_ratio) < 0.0001
+
+```
+<br> 
+
+*Now we'll verifty that vectors v and y are identical after standardization*:  
+  
+```{r}
+# standardize 1st vector in v:  displays element values relative to value of element 1
+v1_ratio <- c(svdA$v[,1][1]/svdA$v[,1][1],svdA$v[,1][2]/svdA$v[,1][1],svdA$v[,1][3]/svdA$v[,1][1]) 
+v1_ratio
+
+# standardize 1st eigenvector of y: displays element values relative to value of element 1
+y1_ratio <- c(eigenY$vectors[,1][1]/eigenY$vectors[,1][1],eigenY$vectors[,1][2]/eigenY$vectors[,1][1],eigenY$vectors[,1][3]/eigenY$vectors[,1][1])
+y1_ratio
+
+# verify that vectors v1_ratio and y1_ratio are identical, after accounting for small differences in rounding
+abs(y1_ratio -  v1_ratio) < 0.0001
+
+
+# standardize 2nd vector in v:  displays element values relative to value of element 1
+v2_ratio <- c(svdA$v[,2][1]/svdA$v[,2][1],svdA$v[,2][2]/svdA$v[,2][1],svdA$v[,2][3]/svdA$v[,2][1]) 
+v2_ratio
+
+# standardize 2nd eigenvector of y: displays element values relative to value of element 1
+y2_ratio <- c(eigenY$vectors[,2][1]/eigenY$vectors[,2][1],eigenY$vectors[,2][2]/eigenY$vectors[,2][1],eigenY$vectors[,2][3]/eigenY$vectors[,2][1])
+y2_ratio
+
+# verify that vectors v2_ratio and y2_ratio are identical, after accounting for small differences in rounding
+abs(y2_ratio -  v2_ratio) < 0.0001
+
+
+```
+<br>
+In addition, the two non-zero eigenvalues (the 3rd value will
+be very close to zero, if not zero) of both **X** and **Y** are the same and are squares of the
+non-zero singular values of **A**.  
+
+```{r}
+# verify that the first eigenvalue is identical in X and Y
+abs(eigenX$values[1] - eigenY$values[1]) < 0.0001
+
+# verify that the second eigenvalue is identical in both X and Y
+abs(eigenX$values[2] - eigenY$values[2]) < 0.0001
+
+# X does not have a third eigenvalue, but we can verify that the third eigenvalue in Y is close to zero
+abs(eigenY$values[3] - 0 ) < 0.0001
+
+# verify that squares of non-zero singular values are identical to the squares of the first two eigenvalues 
+abs(svdA$d^2 - eigenX$values) < 0.001 
+
+```
+  
+## Problem Set 2
+Using the procedure outlined in section 1 of the weekly handout, write a function to
+compute the inverse of a well-conditioned full-rank square matrix using co-factors. In order
+to compute the co-factors, you may use built-in commands to compute the determinant.
+Your function should have the following signature: B = myinverse(A), where **A** is a matrix and **B** is its inverse and **AB = I**. The off-diagonal elements of **I** should be close to zero, if not zero. Likewise, the diagonal elements should be close to 1, if not 1. Small numerical precision errors are acceptable but the function myinverse should be correct and must use co-factors and determinant of A to compute the inverse.  
+ 
+```{r}
+myinverse <- function(A){
+    
+    # initialize cofactor matrix variable, C. 
+    C <- numeric()
+    
+    # the two for-loops immediately below are used to create
+    # all possible cofactors, Cij
+    for (rcount in 1:nrow(A)){
+        for (ccount in 1:ncol(A)){
+            
+            # initialize cofactor(i,j) variable
+            cf_ij <- numeric()
+            
+            # loop through elements of matrix A
+            for (i in 1:nrow(A)){
+                for (j in 1:ncol(A)){
+                    
+                    # element belongs in cofactor (i,j) if
+                    # i is not equal to rcount, j is not equal to ccount
+                    if (i != rcount && j != ccount){
+                        # if element belongs, append value to cf_ij variable
+                        cf_ij <- c(cf_ij,A[i,j])
+                    }
+                }
+            }
+            
+            # reassign cf_ij as matrix variable with dimensions (m-1), (n-1)
+            cf_ij <- matrix(cf_ij,nrow=nrow(A)-1,ncol=ncol(A)-1,byrow=FALSE)
+            
+            # take determinant of cf_ij,
+            # multiply by (-1) if sum of i + j is odd; otherwise multiply by 1
+            # append result to cofactor matrix, C
+            C <- c(C, det(cf_ij)* (-1)^(rcount+ccount))
+        }
+    }
+    
+    # transpose of cofactor matrix, C
+    C_trans <- t(C)
+    
+    # calculate inverse as C^T / det(A)
+    inverse <- matrix(C_trans / det(A), nrow(A), ncol(A), byrow=FALSE)
+    
+    # return inverse
+    inverse
+}
+
+
+```
+
+*Let's do some testing using a 2x2 test matrix*:
+
+```{r}
+
+# initialize 2x2 matrix
+
+A <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+A
+
+# find inverse using myinverse() function 
+B <- myinverse(A)
+B
+
+# now, find inverse using built-in, solve()
+solve(A)
+
+# confirm that the two solutions match:  
+abs(B - solve(A)) < 0.0001
+
+# verify that AB is the identity matrix (or approximately so)
+A %*% B
+
+abs(A %*% B - diag(2)) < 0.0001
+
+
+```    
+<br>  
+*Let's do one more test with a 3x3 test matrix:*  
+```{r}
+# initialize 3x3 matrix
+
+A <- matrix(c(-1,3,-3,0,-6,5,-5,-3,1),3,3,byrow=TRUE)
+A
+# find inverse using myinverse() function 
+B <- myinverse(A)
+B
+
+# now, find inverse using built-in, solve()
+solve(A)
+
+# confirm that the two solutions match:  
+abs(B - solve(A)) < 0.0001
+
+# verify that AB is the identity matrix (or approximately so)
+A %*% B
+
+abs(A %*% B - diag(3)) < 0.0001
+
+
+
+```    
+                      
+                   
